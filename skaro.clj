@@ -3,10 +3,11 @@
 ;;; rules
 
 (defn move [[x y] input]
-  (cond (= input "up") [x (dec y)]
-        (= input "down") [x (inc y)]
-        (= input "left") [(dec x) y]
-        (= input "right") [(inc x) y]))
+  (case input
+    "up" [x (dec y)]
+    "down" [x (inc y)]
+    "left" [(dec x) y]
+    "right" [(inc x) y]))
 
 (defn allowed? [{:keys [width height]} [x y]]
   (and x y

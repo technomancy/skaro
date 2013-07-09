@@ -5,16 +5,12 @@
 ;;; rules
 
 (define (move position input)
-  ;; TODO: use case
-  (cond ((eq? input 'up) (cons (car position)
-                               (sub1 (cdr position))))
-        ((eq? input 'down) (cons (car position)
-                                 (add1 (cdr position))))
-        ((eq? input 'left) (cons (sub1 (car position))
-                                 (cdr position)))
-        ((eq? input 'right) (cons (add1 (car position))
-                                  (cdr position)))
-        (#t #f)))
+  (case input
+    ('up (cons (car position) (sub1 (cdr position))))
+    ('down (cons (car position) (add1 (cdr position))))
+    ('left (cons (sub1 (car position)) (cdr position)))
+    ('right (cons (add1 (car position)) (cdr position)))
+    (else #f)))
 
 (define (allowed? board position)
   (and position
