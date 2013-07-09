@@ -32,23 +32,15 @@
 
 ;;; drawing
 
-(define (update-row row marker col)
-  (append (take row col) (list marker) (drop row (add1 col))))
-
 (define (place marker position rows)
-  (let ((before-rows (take rows (cdr position)))
-        (row (list-ref rows (cdr position)))
-        (after-rows (drop rows (add1 (cdr position)))))
-    (append before-rows
-            (list (update-row row marker (car position)))
-            after-rows)))
+  (set-car! (drop (list-ref rows (cdr position)) (car position)) marker))
 
 (define (draw-board board)
-  (let* ((rows (make-list (hash-table-ref board 'height)
-                          (make-list (hash-table-ref board 'width) '_)))
-         (rows (place 'O (hash-table-ref board 'player) rows))
-         (rows (fold (cut place 'M <> <>) rows (hash-table-ref board 'enemies)))
-         (rows (fold (cut place 'X <> <>) rows (hash-table-ref board 'piles))))
+  (let ((rows (map (lambda (_) (make-list (hash-table-ref board 'width) '_))
+                   (iota (hash-table-ref board 'height)))))
+    (place 'O (hash-table-ref board 'player) rows)
+    (for-each (cut place 'M <> rows) (hash-table-ref board 'enemies))
+    (for-each (cut place 'X <> rows) (hash-table-ref board 'piles))
     (for-each print rows)))
 
 ;;; game loop
