@@ -32,12 +32,6 @@
 
 ;;; drawing
 
-(define (draw-rows rows)
-  (when (not (null? rows))
-    (display (car rows))
-    (newline)
-    (draw-rows (cdr rows))))
-
 (define (update-row row marker col)
   (append (take row col) (list marker) (drop row (add1 col))))
 
@@ -55,7 +49,7 @@
          (rows (place 'O (hash-table-ref board 'player) rows))
          (rows (fold (cut place 'M <> <>) rows (hash-table-ref board 'enemies)))
          (rows (fold (cut place 'X <> <>) rows (hash-table-ref board 'piles))))
-    (draw-rows rows)))
+    (for-each print rows)))
 
 ;;; game loop
 
