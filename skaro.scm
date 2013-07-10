@@ -14,21 +14,19 @@
 
 (define (allowed? board position)
   (and position
-       (not (negative? (car position)))
-       (not (negative? (cdr position)))
-       (not (>= (car position) (hash-table-ref board 'width)))
-       (not (>= (cdr position) (hash-table-ref board 'height)))))
+       (>= 0 (car position) (board-width board))
+       (>= 0 (cdr position) (board-height board))))
 
 (define (collision? position obstacles)
-  (> (length (filter (cut equal? position <>) obstacles)) 1))
+  (> (count (cut equal? position <>) obstacles) 1))
 
 (define (get-collisions enemies obstacles)
   (filter (cut collision? <> obstacles) enemies))
 
 (define (killed? board)
-  (member (hash-table-ref board 'player)
-          (append (hash-table-ref board 'enemies)
-                  (hash-table-ref board 'piles))))
+  (member (board-player board)
+          (append (board-enemies board)
+                  (board-piles board))))
 
 ;;; drawing
 
@@ -36,23 +34,22 @@
   (set-car! (drop (list-ref rows (cdr position)) (car position)) marker))
 
 (define (draw-board board)
-  (let ((rows (map (lambda (_) (make-list (hash-table-ref board 'width) '_))
-                   (iota (hash-table-ref board 'height)))))
-    (place 'O (hash-table-ref board 'player) rows)
-    (for-each (cut place 'M <> rows) (hash-table-ref board 'enemies))
-    (for-each (cut place 'X <> rows) (hash-table-ref board 'piles))
+  (let ((rows (map (lambda (_) (make-list (board-width board) '_))
+                   (iota (board-height board)))))
+    (place 'O (board-player board) rows)
+    (for-each (cut place 'M <> rows) (board-enemies board))
+    (for-each (cut place 'X <> rows) (board-piles board))
     (for-each print rows)))
 
 ;;; game loop
 
 (define (move-player! board input)
   (if (eq? input 'teleport)
-      (hash-table-set! board 'player
-                       (cons (random (hash-table-ref board 'width))
-                             (random (hash-table-ref board 'height))))
-      (let ((new-position (move (hash-table-ref board 'player) input)))
+      (board-player-set! board (cons (random (board-width board))
+                                     (random (board-height board))))
+      (let ((new-position (move (board-player board) input)))
         (when (allowed? board new-position)
-          (hash-table-set! board 'player new-position)))))
+          (board-player-set! board new-position)))))
 
 (define (move-enemy player enemy)
   (let ((dx (- (car player) (car enemy)))
@@ -62,16 +59,14 @@
         (cons (car enemy) ((if (positive? dy) add1 sub1) (cdr enemy))))))
 
 (define (move-enemies! board)
-  (hash-table-update! board 'enemies
-                      (cut map (cut move-enemy
-                                    (hash-table-ref board 'player) <>) <>)))
+  (board-enemies-set! board (map (cut move-enemy (board-player board) <>)
+                                 (board-enemies board))))
 
 (define (collisions! board collisions)
   (when (not (null? collisions))
-    (hash-table-update! board 'enemies
-                        (cut remove
-                             (cut equal? (car collisions) <>) <>))
-    (hash-table-update! board 'piles (cut cons (car collisions) <>))
+    (board-enemies-set! board (remove (cut equal? (car collisions) <>)
+                                      (board-enemies board)))
+    (board-piles-set! board (cons (car collisions) (board-piles board)))
     (collisions! board (cdr collisions))))
 
 (define (play board input)
@@ -79,40 +74,31 @@
          (display "You died.\n"))
         ((eq? input 'quit)
          (display "Bye.\n"))
-        ((null? (hash-table-ref board 'enemies))
+        ((null? (board-enemies board))
          (display "You won. Nice job.\n"))
         (#t (move-player! board input)
             (move-enemies! board)
-            (let* ((enemies (hash-table-ref board 'enemies))
-                   (obstacles (append enemies (hash-table-ref board 'piles))))
+            (let* ((enemies (board-enemies board))
+                   (obstacles (append enemies (board-piles board))))
               (collisions! board (get-collisions enemies obstacles)))
             (draw-board board)
             (play board (read)))))
 
 ;;; setup
 
-(define (add-enemy board enemies)
-  (cons (cons (random (hash-table-ref board 'width))
-              (random (hash-table-ref board 'height))) enemies))
+(define-record board width height player enemies piles)
 
-(define (add-enemies! board enemies)
-  (when (positive? enemies)
-    (hash-table-update! board 'enemies
-                        (cut add-enemy board <>)
-                        (constantly '()))
-    (add-enemies! board (sub1 enemies))))
-
-(define (make-board width height enemies)
-  (let ((board (make-hash-table)))
-    (hash-table-set! board 'width width)
-    (hash-table-set! board 'height height)
-    (hash-table-set! board 'piles '())
-    (hash-table-set! board 'player (cons (random width)
-                                         (random height)))
-    (add-enemies! board enemies)
-    board))
+(define (make-enemies width height enemies enemy-count)
+  (if (zero? enemy-count)
+      enemies
+      (cons (cons (random width) (random height))
+            (make-enemies width height enemies (sub1 enemy-count)))))
 
 (define (main args)
-  (let ((board (make-board 10 10 4)))
+  (let* ((width 10)
+         (height 10)
+         (board (make-board width height (cons (random width)
+                                               (random height))
+                            (make-enemies width height '()  4) '())))
     (draw-board board)
     (play board (read))))
