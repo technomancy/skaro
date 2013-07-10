@@ -10,9 +10,7 @@
     "right" [(inc x) y]))
 
 (defn allowed? [{:keys [width height]} [x y]]
-  (and x y
-       (not (neg? x)) (not (neg? y))
-       (not (>= x width)) (not (>= y height))))
+  (and x y (<= 0 x width) (<= 0 y height)))
 
 (defn collision? [obstacles position]
   (> (count (filter (partial = position) obstacles)) 1))
