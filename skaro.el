@@ -43,7 +43,7 @@
   (read-only-mode t))
 
 (defun skaro-collide (collision)
-  (setq skaro-enemies (remove collision skaro-enemies))
+  (delete collision skaro-enemies)
   (add-to-list 'skaro-piles collision))
 
 (defun skaro-move-enemy (enemy)
@@ -102,5 +102,5 @@
 
 (defun skaro ()
   (interactive)
-  (switch-to-buffer "*skaro*")
+  (switch-to-buffer (generate-new-buffer-name "*skaro*"))
   (skaro-mode))
