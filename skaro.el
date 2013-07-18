@@ -1,5 +1,7 @@
 ;;;; skaro.el --- Silly robots game
 
+(require 'cl)
+
 ;;; rules
 
 (defun skaro-killed-p ()
