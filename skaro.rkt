@@ -55,8 +55,8 @@
             board))))
 
 (define (move-enemy player enemy)
-  (let ((dx (- (car player) (car enemy)))
-        (dy (- (cdr player) (cdr enemy))))
+  (let ([dx (- (car player) (car enemy))]
+        [dy (- (cdr player) (cdr enemy))])
     (if (> (abs dx) (abs dy))
         (cons ((if (positive? dx) add1 sub1) (car enemy)) (cdr enemy))
         (cons (car enemy) ((if (positive? dy) add1 sub1) (cdr enemy))))))
@@ -75,15 +75,15 @@
 (define round (compose collisions move-enemies move-player))
 
 (define (play board input)
-  (cond ((killed? board)
-         (display "You died.\n"))
-        ((eq? input 'quit)
-         (display "Bye.\n"))
-        ((null? (hash-ref board 'enemies))
-         (display "You won. Nice job.\n"))
-        (else (let ([board (round board input)])
+  (cond [(killed? board)
+         (display "You died.\n")]
+        [(eq? input 'quit)
+         (display "Bye.\n")]
+        [(null? (hash-ref board 'enemies))
+         (display "You won. Nice job.\n")]
+        [else (let ([board (round board input)])
                 (draw-board board)
-                (play board (read))))))
+                (play board (read)))]))
 
 ;;; setup
 
