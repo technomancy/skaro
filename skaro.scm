@@ -6,10 +6,10 @@
 
 (define (move position input)
   (case input
-    ('up (cons (car position) (sub1 (cdr position))))
-    ('down (cons (car position) (add1 (cdr position))))
-    ('left (cons (sub1 (car position)) (cdr position)))
-    ('right (cons (add1 (car position)) (cdr position)))
+    (up (cons (car position) (sub1 (cdr position))))
+    (down (cons (car position) (add1 (cdr position))))
+    (left (cons (sub1 (car position)) (cdr position)))
+    (right (cons (add1 (car position)) (cdr position)))
     (else #f)))
 
 (define (allowed? board position)
