@@ -12,7 +12,7 @@
        (<= x (car skaro-size)) (<= y (cdr skaro-size))))
 
 (defun skaro-collision-p (position)
-  (> (count position (append skaro-enemies skaro-piles)) 1))
+  (> (count position (append skaro-enemies skaro-piles) :test 'equal) 1))
 
 (defun skaro-get-collisions ()
   (remove-if-not 'skaro-collision-p skaro-enemies))
