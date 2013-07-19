@@ -42,7 +42,9 @@
 (defun skaro-end (text)
   (message text)
   (fundamental-mode)
-  (read-only-mode t))
+  (if (fboundp 'read-only-mode)
+      (read-only-mode t)
+    (setq buffer-read-only t)))
 
 (defun skaro-collide (collision)
   (delete collision skaro-enemies)
