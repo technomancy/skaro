@@ -11,7 +11,7 @@
   (and (>= x 0) (>= y 0)
        (<= x (car skaro-size)) (<= y (cdr skaro-size))))
 
-(defun skaro-collision-p (obstacles position)
+(defun skaro-collision-p (position)
   (> (count position (append skaro-enemies skaro-piles)) 1))
 
 (defun skaro-get-collisions ()
