@@ -65,10 +65,10 @@
   (dolist (collision (skaro-get-collisions))
     (skaro-collide collision))
   (skaro-draw-board)
-  (when (skaro-killed-p)
-    (skaro-end "You died."))
   (when (null skaro-enemies)
-    (skaro-end "You won. Nice job.")))
+    (skaro-end "You won. Nice job."))
+  (when (skaro-killed-p)
+    (skaro-end "You died.")))
 
 (defun skaro-teleport ()
   (interactive)
