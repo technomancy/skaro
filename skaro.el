@@ -47,7 +47,7 @@
     (setq buffer-read-only t)))
 
 (defun skaro-collide (collision)
-  (delete collision skaro-enemies)
+  (setq skaro-enemies (delete collision skaro-enemies))
   (add-to-list 'skaro-piles collision))
 
 (defun skaro-move-enemy (enemy)
