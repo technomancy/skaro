@@ -69,7 +69,7 @@
     (skaro-end "You won. Nice job.")))
 
 (defun skaro-teleport ()
-  (intercative)
+  (interactive)
   (let ((new-position (skaro-random)))
     (skaro-play (- (car new-position) (car skaro-player))
                 (- (cdr new-position) (cdr skaro-player)))))
