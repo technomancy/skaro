@@ -12,7 +12,7 @@
        (<= x (car skaro-size)) (<= y (cdr skaro-size))))
 
 (defun skaro-collision-p (position)
-  (> (count position (append skaro-enemies skaro-piles)) 1))
+  (> (count position (append skaro-enemies skaro-piles) :test 'equal) 1))
 
 (defun skaro-get-collisions ()
   (remove-if-not 'skaro-collision-p skaro-enemies))
@@ -47,7 +47,7 @@
     (setq buffer-read-only t)))
 
 (defun skaro-collide (collision)
-  (delete collision skaro-enemies)
+  (setq skaro-enemies (delete collision skaro-enemies))
   (add-to-list 'skaro-piles collision))
 
 (defun skaro-move-enemy (enemy)
@@ -65,10 +65,10 @@
   (dolist (collision (skaro-get-collisions))
     (skaro-collide collision))
   (skaro-draw-board)
-  (when (skaro-killed-p)
-    (skaro-end "You died."))
   (when (null skaro-enemies)
-    (skaro-end "You won. Nice job.")))
+    (skaro-end "You won. Nice job."))
+  (when (skaro-killed-p)
+    (skaro-end "You died.")))
 
 (defun skaro-teleport ()
   (interactive)
