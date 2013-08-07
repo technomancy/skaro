@@ -76,13 +76,13 @@
          (display "Bye.\n"))
         ((null? (board-enemies board))
          (display "You won. Nice job.\n"))
-        (#t (move-player! board input)
-            (move-enemies! board)
-            (let* ((enemies (board-enemies board))
-                   (obstacles (append enemies (board-piles board))))
-              (collisions! board (get-collisions enemies obstacles)))
-            (draw-board board)
-            (play board (read)))))
+        (else (move-player! board input)
+              (move-enemies! board)
+              (let* ((enemies (board-enemies board))
+                     (obstacles (append enemies (board-piles board))))
+                (collisions! board (get-collisions enemies obstacles)))
+              (draw-board board)
+              (play board (read)))))
 
 ;;; setup
 
