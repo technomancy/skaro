@@ -85,7 +85,6 @@ let collisions board =
 let round board input =
   collisions (move_enemies (move_player board input))
 
-(* TODO: board is getting drawn at the wrong point *)
 let rec play board input =
   if killed board then
     printf "You died.\n"
