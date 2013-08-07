@@ -39,10 +39,10 @@ let get_piece pieces row col =
     | Some x -> x
     | None -> "-"
 
-let get_pieces board =
-  let pieces = [(board.player, "O")] in
-  let pieces = List.fold ~init:pieces ~f:(place "M") board.enemies in
-  let pieces = List.fold ~init:pieces ~f:(place "X") board.piles in
+let get_pieces { player; enemies; piles } =
+  let pieces = [(player, "O")] in
+  let pieces = List.fold ~init:pieces ~f:(place "M") enemies in
+  let pieces = List.fold ~init:pieces ~f:(place "X") piles in
   pieces
 
 let draw_row pieces width row =
@@ -63,8 +63,7 @@ let move_player board input =
     | None -> board
 
 let move_enemy (px,py) (x,y) =
-  let dx = px - x in
-  let dy = py - y in
+  let (dx,dy) = (px - x, py - y) in
   if (abs dx) > (abs dy) then
     if dx > 0 then
       (x + 1, y) else
@@ -76,11 +75,11 @@ let move_enemy (px,py) (x,y) =
 let move_enemies board =
   { board with enemies = List.map board.enemies (move_enemy board.player) }
 
-let collisions board =
-  let colls = get_collisions board.enemies board.enemies @ board.piles in
+let collisions ({ enemies; piles } as board) =
+  let colls = get_collisions enemies enemies @ piles in
   let surviving = (Fn.compose not (List.mem colls)) in
-  { board with piles = board.piles @ colls;
-               enemies = List.filter board.enemies surviving }
+  { board with piles = piles @ colls;
+               enemies = List.filter enemies surviving }
 
 let round board input =
   collisions (move_enemies (move_player board input))
