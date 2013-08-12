@@ -50,28 +50,28 @@
       (hash-set board 'player
                 (cons (random (hash-ref board 'width))
                       (random (hash-ref board 'height))))
-      (let ((new-position (move (hash-ref board 'player) input)))
+      (let ([new-position (move (hash-ref board 'player) input)])
         (if (allowed? board new-position)
             (hash-set board 'player new-position)
             board))))
 
 (define (move-enemy player enemy)
-  (let ([dx (- (car player) (car enemy))]
-        [dy (- (cdr player) (cdr enemy))])
-    (if (> (abs dx) (abs dy))
-        (cons ((if (positive? dx) add1 sub1) (car enemy)) (cdr enemy))
-        (cons (car enemy) ((if (positive? dy) add1 sub1) (cdr enemy))))))
+  (define dx (- (car player) (car enemy)))
+  (define dy (- (cdr player) (cdr enemy)))
+  (if (> (abs dx) (abs dy))
+      (cons ((if (positive? dx) add1 sub1) (car enemy)) (cdr enemy))
+      (cons (car enemy) ((if (positive? dy) add1 sub1) (cdr enemy)))))
 
 (define (move-enemies board)
   (hash-update board 'enemies
                (curry map (curry move-enemy (hash-ref board 'player)))))
 
 (define (collisions board)
-  (let* ([collisions (get-collisions (hash-ref board 'enemies)
+  (define collisions (get-collisions (hash-ref board 'enemies)
                                      (append (hash-ref board 'enemies)
-                                             (hash-ref board 'piles)))]
-         [board (hash-update board 'piles (curry append collisions))])
-    (hash-update board 'enemies (curry remove* collisions))))
+                                             (hash-ref board 'piles))))
+  (define new-board (hash-update board 'piles (curry append collisions)))
+  (hash-update new-board 'enemies (curry remove* collisions)))
 
 (define round (compose collisions move-enemies move-player))
 
@@ -82,26 +82,26 @@
          (display "Bye.\n")]
         [(null? (hash-ref board 'enemies))
          (display "You won. Nice job.\n")]
-        [else (let ([board (round board input)])
-                (draw-board board)
-                (play board (read)))]))
+        [else (define new-board (round board input))
+              (draw-board new-board)
+              (play new-board (read))]))
 
 ;;; setup
 
 (define (add-enemy _ board)
-  (let ([enemy (cons (random (hash-ref board 'width))
-                     (random (hash-ref board 'height)))])
-    (hash-update board 'enemies (curry cons enemy))))
+  (define enemy (cons (random (hash-ref board 'width))
+                      (random (hash-ref board 'height))))
+  (hash-update board 'enemies (curry cons enemy)))
 
 (define (make-board width height enemies)
-  (let ([board (hash 'width width
-                     'height height
-                     'piles '() 'enemies '()
-                     'player (cons (random width)
-                                   (random height)))])
-    (foldl add-enemy board (range enemies))))
+  (define board (hash 'width width
+                      'height height
+                      'piles '() 'enemies '()
+                      'player (cons (random width)
+                                    (random height))))
+  (foldl add-enemy board (range enemies)))
 
 (module+ main
-  (let ((board (make-board 10 10 4)))
-    (draw-board board)
-    (play board (read))))
+  (define board (make-board 10 10 4))
+  (draw-board board)
+  (play board (read)))
