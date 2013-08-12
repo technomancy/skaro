@@ -88,18 +88,13 @@
 
 ;;; setup
 
-(define (add-enemy _ board)
-  (define enemy (cons (random (hash-ref board 'width))
-                      (random (hash-ref board 'height))))
-  (hash-update board 'enemies (curry cons enemy)))
-
 (define (make-board width height enemies)
-  (define board (hash 'width width
-                      'height height
-                      'piles '() 'enemies '()
-                      'player (cons (random width)
-                                    (random height))))
-  (foldl add-enemy board (range enemies)))
+  (define (rand-pos) (cons (random width) (random height)))
+  (hash 'width width
+        'height height
+        'piles '()
+        'enemies (for/list ([i enemies]) (rand-pos))
+        'player (rand-pos)))
 
 (module+ main
   (play (make-board 10 10 4)))
