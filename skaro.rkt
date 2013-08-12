@@ -1,3 +1,4 @@
+#!/usr/bin/env racket
 #lang racket
 
 ;;;; SKARO: a game based on https://en.wikipedia.org/wiki/Robots_(BSD_game)
@@ -100,7 +101,7 @@
                                    (random height)))])
     (foldl add-enemy board (range enemies))))
 
-(define (main args)
+(module+ main
   (let ((board (make-board 10 10 4)))
     (draw-board board)
     (play board (read))))
