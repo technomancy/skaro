@@ -1,6 +1,9 @@
+#!/usr/bin/env racket
 #lang racket
 
 ;;;; SKARO: a game based on https://en.wikipedia.org/wiki/Robots_(BSD_game)
+
+(struct board (width height piles enemies player))
 
 ;;; rules
 
@@ -12,95 +15,102 @@
     ['right (cons (add1 (car position)) (cdr position))]
     [_ #f]))
 
-(define (allowed? board position)
+(define (allowed? a-board position)
   (and position
-       (>= 0 (car position) (hash-ref board 'width))
-       (>= 0 (cdr position) (hash-ref board 'height))))
+       (<= 0 (car position) (board-width  a-board))
+       (<= 0 (cdr position) (board-height a-board))))
 
 (define (collision? obstacles position)
-  (> (count (curry = position) obstacles) 1))
+  (> (count (curry equal? position) obstacles) 1))
 
 (define (get-collisions enemies obstacles)
   (filter (curry collision? obstacles) enemies))
 
-(define (killed? board)
-  (member (hash-ref board 'player)
-          (append (hash-ref board 'enemies)
-                  (hash-ref board 'piles))))
+(define (killed? a-board)
+  (member (board-player a-board)
+          (append (board-enemies a-board)
+                  (board-piles   a-board))))
 
 ;;; drawing
 
 (define (place marker position rows)
   (hash-set rows position marker))
 
-(define (draw-board board)
-  (let* ([rows (hash (hash-ref board 'player) 'O)]
-         [rows (foldl (curry place 'M) rows (hash-ref board 'enemies))]
-         [rows (foldl (curry place 'X) rows (hash-ref board 'piles))])
-    (for ([y (hash-ref board 'height)])
-      (for ([x (hash-ref board 'width)])
+(define (draw-board a-board)
+  (let* ([rows (hash (board-player a-board) 'O)]
+         [rows (foldl (curry place 'M) rows (board-enemies a-board))]
+         [rows (foldl (curry place 'X) rows (board-piles   a-board))])
+    (for ([y (board-height a-board)])
+      (for ([x (board-width a-board)])
         (display (hash-ref rows (cons x y) '_)))
       (newline))))
 
 ;;; game loop
 
-(define (move-player board input)
+(define (move-player a-board input)
   (if (eq? input 'teleport)
-      (hash-set board 'player
-                (cons (random (hash-ref board 'width))
-                      (random (hash-ref board 'height))))
-      (let ((new-position (move (hash-ref board 'player) input)))
-        (if (allowed? board new-position)
-            (hash-set board 'player new-position)
-            board))))
+      (struct-copy board a-board
+                   [player (cons (random (board-width  a-board))
+                                 (random (board-height a-board)))])
+      (let ([new-position (move (board-player a-board) input)])
+        (if (allowed? a-board new-position)
+            (struct-copy board a-board [player new-position])
+            a-board))))
 
 (define (move-enemy player enemy)
-  (let ([dx (- (car player) (car enemy))]
-        [dy (- (cdr player) (cdr enemy))])
-    (if (> (abs dx) (abs dy))
-        (cons ((if (positive? dx) add1 sub1) (car enemy)) (cdr enemy))
-        (cons (car enemy) ((if (positive? dy) add1 sub1) (cdr enemy))))))
+  (define dx (- (car player) (car enemy)))
+  (define dy (- (cdr player) (cdr enemy)))
+  (if (> (abs dx) (abs dy))
+      (cons ((if (positive? dx) add1 sub1) (car enemy)) (cdr enemy))
+      (cons (car enemy) ((if (positive? dy) add1 sub1) (cdr enemy)))))
 
-(define (move-enemies board)
-  (hash-update board 'enemies
-               (curry map (curry move-enemy (hash-ref board 'player)))))
+(define (move-enemies a-board)
+  (struct-copy board a-board
+               [enemies (map (curry move-enemy (board-player a-board))
+                             (board-enemies a-board))]))
 
-(define (collisions board)
-  (let* ([collisions (get-collisions (hash-ref board 'enemies)
-                                     (append (hash-ref board 'enemies)
-                                             (hash-ref board 'piles)))]
-         [board (hash-update board 'piles (curry append collisions))])
-    (hash-update board 'enemies (curry remove* collisions))))
+(define (collisions a-board)
+  (define collisions (get-collisions (board-enemies a-board)
+                                     (append (board-enemies a-board)
+                                             (board-piles   a-board))))
+  (struct-copy board a-board
+               [piles   (append  collisions (board-piles   a-board))]
+               [enemies (remove* collisions (board-enemies a-board))]))
 
 (define round (compose collisions move-enemies move-player))
 
-(define (play board input)
-  (cond [(killed? board)
+(define (play a-board)
+  (draw-board a-board)
+  (cond [(killed? a-board)
          (display "You died.\n")]
-        [(eq? input 'quit)
-         (display "Bye.\n")]
-        [(null? (hash-ref board 'enemies))
+        [(null? (board-enemies a-board))
          (display "You won. Nice job.\n")]
-        [else (let ([board (round board input)])
-                (draw-board board)
-                (play board (read)))]))
+        [else (define input (read))
+              (if (eq? input 'quit)
+                  (display "Bye.\n")
+                  (play (round a-board input)))]))
 
 ;;; setup
 
-(define (add-enemy _ board)
-  (let ([enemy (cons (random (hash-ref board 'width))
-                     (random (hash-ref board 'height)))])
-    (hash-update board 'enemies (curry cons enemy))))
-
 (define (make-board width height enemies)
-  (let ([board (hash 'width width
-                     'height height
-                     'piles '() 'enemies '()
-                     'player (cons (random width)
-                                   (random height)))])
-    (foldl add-enemy board (range enemies))))
+  (define (rand-pos) (cons (random width) (random height)))
+  (board width height '()
+         (for/list ([i enemies]) (rand-pos))
+         (rand-pos)))
 
-(define (main args)
-  (let ((board (make-board 10 10 4)))
-    (draw-board board)
-    (play board (read))))
+(module+ main
+  (define width    10)
+  (define height   10)
+  (define enemies#  4)
+  (command-line
+   #:once-each
+   [("-W" "--width") W "board width"
+    (set! width (or (string->number W)
+                    (error "width is not not a number")))]
+   [("-H" "--height") H "board height"
+    (set! height (or (string->number H)
+                     (error "height is not not a number")))]
+   [("-E" "--enemies") N "number of enemies"
+    (set! enemies# (or (string->number N)
+                       (error "enemies is not not a number")))])
+  (play (make-board width height enemies#)))
