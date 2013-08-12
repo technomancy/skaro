@@ -75,16 +75,16 @@
 
 (define round (compose collisions move-enemies move-player))
 
-(define (play board input)
+(define (play board)
+  (draw-board board)
   (cond [(killed? board)
          (display "You died.\n")]
-        [(eq? input 'quit)
-         (display "Bye.\n")]
         [(null? (hash-ref board 'enemies))
          (display "You won. Nice job.\n")]
-        [else (define new-board (round board input))
-              (draw-board new-board)
-              (play new-board (read))]))
+        [else (define input (read))
+              (if (eq? input 'quit)
+                  (display "Bye.\n")
+                  (play (round board input)))]))
 
 ;;; setup
 
@@ -102,6 +102,4 @@
   (foldl add-enemy board (range enemies)))
 
 (module+ main
-  (define board (make-board 10 10 4))
-  (draw-board board)
-  (play board (read)))
+  (play (make-board 10 10 4)))
