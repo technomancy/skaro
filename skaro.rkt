@@ -97,4 +97,18 @@
         'player (rand-pos)))
 
 (module+ main
-  (play (make-board 10 10 4)))
+  (define width    10)
+  (define height   10)
+  (define enemies#  4)
+  (command-line
+   #:once-each
+   [("-W" "--width") W "board width"
+    (set! width (or (string->number W)
+                    (error "width is not not a number")))]
+   [("-H" "--height") H "board height"
+    (set! height (or (string->number H)
+                     (error "height is not not a number")))]
+   [("-E" "--enemies") N "number of enemies"
+    (set! enemies# (or (string->number N)
+                       (error "enemies is not not a number")))])
+  (play (make-board width height enemies#)))
