@@ -15,11 +15,11 @@
 
 (define (allowed? board position)
   (and position
-       (>= 0 (car position) (hash-ref board 'width))
-       (>= 0 (cdr position) (hash-ref board 'height))))
+       (<= 0 (car position) (hash-ref board 'width))
+       (<= 0 (cdr position) (hash-ref board 'height))))
 
 (define (collision? obstacles position)
-  (> (count (curry = position) obstacles) 1))
+  (> (count (curry equal? position) obstacles) 1))
 
 (define (get-collisions enemies obstacles)
   (filter (curry collision? obstacles) enemies))
